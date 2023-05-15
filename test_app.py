@@ -36,7 +36,11 @@ class TestWebApp(unittest.TestCase):
 
     def test_no_access_to_profile(self):
         # TODO: Check that non-logged-in user should be redirected to /login
-        assert False
+        #try to fetch the profile page
+        response = self.client.get('/profile', follow_redirects = True)
+        assert response.status_code == 200
+        #return the final web address
+        assert response.request.path == '/login'
 
     def test_register_user(self):
         response = self.client.post('/signup', data = {
@@ -69,7 +73,7 @@ class TestWebApp(unittest.TestCase):
 
         user = User.query.filter_by(email='user@test.com').first()
         assert user is not None
-        assert check_password_hash(user.password, 'test123')
+        assert check_password_hash(user.password, "test123")
 
     def test_sql_injection(self):
         response = self.client.post('/signup', data = {
@@ -81,6 +85,18 @@ class TestWebApp(unittest.TestCase):
 
     def test_xss_vulnerability(self):
         # TODO: Can we store javascript tags in the username field?
-        assert False
-
+        response = self.client.post('/signup', data = {
+            'email' : 'user@test.com',
+            'name' : '<script>alert("Hello");</script>',
+            'password' : 'test123'
+            }, follow_redirects = True)
+        assert response.status_code == 200
+        
+        response = self.client.post('/login', data = {
+            'email' : 'user@test.com',
+            'password' : 'test123'
+        }, follow_redirects = True)
+        assert response.status_code ==200
+        html = response.get_data(as_text = True)
+        assert not '<script>' in html
 
