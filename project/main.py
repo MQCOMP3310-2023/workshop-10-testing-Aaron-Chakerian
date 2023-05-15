@@ -12,8 +12,3 @@ def index():
 @login_required
 def profile():
     return render_template('profile.html', name=current_user.name)
-
-#TESTING
-
-
-#adding a change to push for 11.2.1
